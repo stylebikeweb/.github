@@ -23,4 +23,4 @@ jobs:
     # 必要な権限を渡す設定
     secrets:
       # GITHUBトークンをPATに変更
-      CUSTOM_TOKEN: ${{ secrets.PAT_TOKEN }}
+      CUSTOM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
