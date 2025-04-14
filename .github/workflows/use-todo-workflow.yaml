@@ -22,5 +22,5 @@ jobs:
       PR_TITLE: "✨ TODO管理を自動化したよ～"
     # 必要な権限を渡す設定
     secrets:
-      # 基本的にはこれだけでOK！
-      CUSTOM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # GITHUBトークンをPATに変更
+      CUSTOM_TOKEN: ${{ secrets.PAT_TOKEN }}
