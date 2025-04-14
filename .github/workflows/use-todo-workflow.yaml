@@ -13,7 +13,7 @@ jobs:
   # ここで再利用可能ワークフローを呼び出すよ～
   run-todo-pipeline:
     # 👇 ここ超重要！組織名とリポジトリ名とファイルパス、そしてブランチ名を指定
-    uses: stylebikeweb/github-wrokflows/.github/workflows/todo-to-PR-pipeline.yaml@main
+    uses: stylebikeweb/github-workflows/.github/workflows/todo-to-PR-pipeline.yaml@main
     # 必要なパラメータ渡せるよ～（全部デフォルト値あるから省略もOK！）
     with:
       CLOSE_ISSUES: true
