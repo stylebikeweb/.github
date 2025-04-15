@@ -21,11 +21,4 @@ ISSUE-and-PR-templates
 ```
 他のテンプレは組織の .github リポから拾ってくれるから、めっちゃ便利〜！😘
 
-<!-- DONE: テンプレートを追加
-Issue URL: https://github.com/stylebikeweb/ISSUE-and-PR-templates/issues/1
-- ISSUE_TEMPLATE
-  - bug-report.yml
-  - feature-request.yml
-  - comfig.yml
-- PULL_REQUEST_TEMPLATE 
--->
+
