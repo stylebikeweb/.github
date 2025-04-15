@@ -45,7 +45,7 @@ jobs:
           # Issueの担当者を自動割り当て
           AUTO_ASSIGN: "true"
           # どのタグをどんなラベル付きのIssueに変換するかの設定
-          IDENTIFIER: '[{"name":"TODO","labels":["enhancement"]},{"name":"FIXME","labels":["bug"]}]'
+          IDENTIFIERS: '[{"name":"TODO","labels":["enhancement"]},{"name":"FIXME","labels":["bug"]}]'
        # 🤖 GitHubボットとしてのユーザー情報設定
       - name: Set Git user
         run: |
