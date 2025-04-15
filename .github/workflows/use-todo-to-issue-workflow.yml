@@ -39,11 +39,11 @@ jobs:
         uses: "alstr/todo-to-issue-action@v5"
         with:
           # TODOコメントにIssueのURLを挿入する設定
-          INSERT_ISSUE_URLS: "true"
+          INSERT_ISSUE_URLS: true
           # 対応するTODOコメントが削除されたらIssueも閉じる設定
-          CLOSE_ISSUES: "true"
+          CLOSE_ISSUES: true
           # Issueの担当者を自動割り当て
-          AUTO_ASSIGN: "true"
+          AUTO_ASSIGN: true
           # どのタグをどんなラベル付きのIssueに変換するかの設定
           IDENTIFIERS: '[{"name":"TODO","labels":["enhancement"]},{"name":"FIXME","labels":["bug"]}]'
        # 🤖 GitHubボットとしてのユーザー情報設定
