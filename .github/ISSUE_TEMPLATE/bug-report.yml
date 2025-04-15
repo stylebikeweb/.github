@@ -1,0 +1,109 @@
+name: 🐞 バグ報告
+description: システムの問題や不具合を報告する
+title: "[BUG] "
+labels: ["bug", "status:triage"]
+assignees: 
+  - user
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## バグ報告フォーム
+        このフォームを使って、発生している問題について教えてください。
+        できるだけ詳しい情報を提供していただけると解決が早まります！
+  
+  - type: input
+    id: url
+    attributes:
+      label: 問題が発生しているURL
+      placeholder: https://example.com/page
+    validations:
+      required: false
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 何が起きましたか？
+      description: いつ、どういう時に、どんな操作をすると何が起きましたか？
+      placeholder: 「商品一覧ページで「並び替え」ボタンをクリックしたとき、画面が真っ白になる」
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: 期待される動作
+      description: 本来どのように動作するべきでしたか？
+      placeholder: 「商品が選択した順序で並び替えられるはずだった」
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: browsers
+    attributes:
+      label: どのブラウザで発生していますか？
+      multiple: true
+      options:
+        - Chrome
+        - Safari
+        - Firefox
+        - Edge
+        - Opera
+        - その他（詳細を追加情報に記入してください）
+    validations:
+      required: false
+
+  - type: dropdown
+    id: device
+    attributes:
+      label: どのデバイスで発生していますか？
+      multiple: true
+      options:
+        - デスクトップPC
+        - ノートPC
+        - タブレット
+        - スマートフォン
+        - その他（詳細を追加情報に記入してください）
+    validations:
+      required: false
+
+  - type: textarea
+    id: deadline
+    attributes:
+      label: 期待する期日
+      description: いつまでに修正が必要ですか？（いつでもよければ記載不要です）
+      placeholder: 年/月/日
+    validations:
+      required: false
+
+  - type: textarea
+    id: budget
+    attributes:
+      label: 予算規模（優先度の判断材料になります）
+      description: この問題がビジネスに与える影響を教えてください
+      placeholder: |
+        例:
+        - 2023/12/31までに1,000,000円売り上げ見込み
+        - 50,000円/月のコストダウン
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: スクリーンショット
+      description: |
+        問題の理解に役立つスクリーンショットをここに添付してください
+        - 画像は直接ドラッグ＆ドロップするか、貼り付け(Ctrl+V/⌘+V)できます
+        - 複数の画像を一度に添付可能です
+      placeholder: 画像をここにドラッグするか、クリップボードから貼り付けてください
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 追加情報
+      description: その他、問題解決に役立つ情報があれば記入してください
+    validations:
+      required: false
