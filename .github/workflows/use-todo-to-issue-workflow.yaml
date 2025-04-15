@@ -28,7 +28,9 @@ jobs:
       - name: "TODO to Issue"
         uses: "alstr/todo-to-issue-action@v5"
         with:
-          INSERT_ISSUE_URLS: "true"
+          INSERT_ISSUE_URLS: true
+          CLOSE_ISSUES: true
+          AUTO_ASSIGN: true
       - name: Set Git user
         run: |
           git config --global user.name "github-actions[bot]"
