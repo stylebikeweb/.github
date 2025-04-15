@@ -1,0 +1,72 @@
+# use-todo-workflow.yaml
+name: Use TODO to ISSUE Workflow
+
+# いつ実行するか設定～
+on:
+  # ブランチにpushされたときに実行
+  push:
+    branches: [main, dev, develop]
+  # 手動で実行することもできる設定
+  workflow_dispatch:
+    inputs:
+      MANUAL_COMMIT_REF:
+        description: "The SHA of the commit to get the diff for"
+        required: true
+      MANUAL_BASE_REF:
+        description: "By default, the commit entered above is compared to the one directly before it; to go back further, enter an earlier SHA here"
+        required: false
+
+jobs:
+  # ===============================================================
+  # 🔍 TODOをIssueに変換するジョブ
+  # - コード内のTODO/FIXMEコメントを検出
+  # - 見つかったらGitHub Issueを自動生成
+  # - コメントにIssueへのリンクを挿入
+  # ===============================================================
+  todo-to-issue:
+    runs-on: "ubuntu-latest"
+    # 🔐 権限設定：リポジトリの内容変更とIssue作成の権限が必要
+    permissions:
+      contents: write      # リポジトリの内容を変更するため
+      issues: write        # Issueを作成するため
+      pull-requests: write # PRを作成するため
+    steps:
+      - uses: "actions/checkout@v4"
+        with:
+          # 手動実行時は指定されたref、自動実行時は通常のrefを使用
+          ref: ${{ github.event.inputs.MANUAL_REF || github.ref }}
+      - name: "TODO to Issue"
+        uses: "alstr/todo-to-issue-action@v5"
+        with:
+          # TODOコメントにIssueのURLを挿入する設定
+          INSERT_ISSUE_URLS: "true"
+          # 対応するTODOコメントが削除されたらIssueも閉じる設定
+          CLOSE_ISSUES: "true"
+          # Issueの担当者を自動割り当て
+          AUTO_ASSIGN: "true"
+          # どのタグをどんなラベル付きのIssueに変換するかの設定
+          IDENTIFIER: '[{"name":"TODO","labels":["enhancement"]},{"name":"FIXME","labels":["bug"]}]'
+       # 🤖 GitHubボットとしてのユーザー情報設定
+      - name: Set Git user
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      # 📝 追加されたIssueのURLをコミット＆プッシュする
+      - name: Commit and Push Changes
+        run: |
+          git add -A
+          # 変更がある場合のみコミット＆プッシュ
+          if [[ `git status --porcelain` ]]; then
+            echo "✅ 変更を検出したよ！コミットするね〜"
+            git commit -m "${{ inputs.COMMIT_MESSAGE }}"
+            # 現在のブランチ名を取得して、そのブランチにプッシュ！
+            CURRENT_BRANCH=$(git symbolic-ref --short HEAD || echo "main")
+            echo "📤 変更を ${CURRENT_BRANCH} ブランチにプッシュするよ！"
+            git push origin $CURRENT_BRANCH
+          else
+            echo "❌ 変更が見つからなかったよ... 原因を調査しよう！"
+            echo "もしかして："
+            echo "1. TODOアクションが実際にファイルを変更していない？"
+            echo "2. 権限の問題でファイルが変更できていない？"
+            echo "3. gitの設定に問題がある？"
+          fi
