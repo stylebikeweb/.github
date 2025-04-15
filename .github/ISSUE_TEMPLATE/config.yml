@@ -3,6 +3,6 @@ contact_links:
   - name: 🤔 質問がある？Discussionsで聞いてみよう！
     url: https://github.com/stylebikeweb/.github/discussions
     about: バグじゃない質問はこっちで
-  - name: 📚 ドキュメントを読む
-    url: https://docs.example.com
-    about: 使い方の詳細はこちらをチェック！
+  # - name: 📚 ドキュメントを読む
+  #   url: https://docs.example.com
+  #   about: 使い方の詳細はこちらをチェック！
