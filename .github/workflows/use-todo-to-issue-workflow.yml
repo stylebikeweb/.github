@@ -1,5 +1,5 @@
 # https://github.com/stylebikeweb/.github/blob/main/.github/workflows/use-todo-to-issue-workflow.yml
-# から複製されたワークフロー。変更は↑に適用するべし！
+# から複製されたワークフロー。変更は↑に適用するべし！（テスト中）
 name: Use TODO to ISSUE Workflow
 
 # いつ実行するか設定～
