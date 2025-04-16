@@ -1,0 +1,9 @@
+group:
+  # 同期する対象ファイルとリポジトリの設定
+  - files:
+      - source: .github/workflows/use-todo-to-issue-workflow.yml
+        dest: .github/workflows/use-todo-to-issue-workflow.yml
+    repos:
+      - stylebikeweb/shopify-email-notifications
+      # 必要に応じて他のリポジトリも追加可能
+      # - stylebikeweb/他のリポ名
