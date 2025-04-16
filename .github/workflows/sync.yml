@@ -36,11 +36,9 @@ jobs:
             - このファイルを使っている他のワークフローに影響ないか確認してね
             
             自動生成されたPRだから、確認してからマージしてね～
-          COMMIT_PREFIX: "🔄"
-          PR_TITLE: "TODOワークフロー更新"
-          COMMIT_MESSAGE: "TODOワークフローファイルを更新"
+          COMMIT_PREFIX: "🔄 TODOワークフロー更新"
           GIT_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
           GIT_USERNAME: "github-actions[bot]"
           SKIP_PR: false
-          DRY_RUN: false
+          PR_LABELS: "automation,maintenance"
           BRANCH_PREFIX: "sync-"
