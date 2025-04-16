@@ -1,0 +1,133 @@
+name: 複数リポにファイルシンク爆速ワークフロー🔄
+
+on:
+  # ファイルが変更されたらシンクを実行
+  push:
+    paths:
+      - '.github/workflows/use-todo-to-issue-workflow.yml'
+  
+  # 手動で実行もできるようにしておく
+  workflow_dispatch:
+
+jobs:
+  sync-file:
+    runs-on: ubuntu-latest
+    # ここがポイント！マトリックス戦略でループ回しちゃう！
+    strategy:
+      matrix:
+        target: 
+          - "stylebikeweb/shopify-email-notifications:main"
+          # ここにターゲットリポジトリを追加するだけ！超簡単～
+          # - repo: "stylebikeweb/shopify-email-notifications:main"
+          # 必要なだけ追加可能！こんな感じで～
+          # - repo: "stylebikeweb/ターゲットリポジトリ2"
+          #   branch: "main"
+          # - repo: "stylebikeweb/ターゲットリポジトリ3"
+          #   branch: "main"
+      # 一つが失敗しても他は続行する設定
+      fail-fast: false
+    
+    # 各ターゲットリポジトリごとに並列で処理！
+    name: ${{ matrix.target.repo }}へ同期中...
+    
+    # GitHub Actions内でクロスリポジトリ操作の権限設定
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: ソースリポジトリをチェックアウト
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 履歴も含めて取得
+
+      - name: PR作成準備
+        id: pr-setup
+        run: |
+          # ターゲットリポジトリ情報を設定
+          SYNC_DATE=$(date +"%Y.%m.%d")
+          echo "SYNC_DATE=$SYNC_DATE" >> $GITHUB_OUTPUT
+          echo "BRANCH_NAME=sync-todo-workflow-$SYNC_DATE" >> $GITHUB_OUTPUT
+          
+          # 同期するファイルのパスを設定
+          SOURCE_FILE=".github/workflows/use-todo-to-issue-workflow.yml"
+          echo "SOURCE_FILE=$SOURCE_FILE" >> $GITHUB_OUTPUT
+          
+          # ファイルの内容をBase64エンコードして渡す準備
+          FILE_CONTENT=$(base64 -w 0 "$SOURCE_FILE")
+          echo "FILE_CONTENT=$FILE_CONTENT" >> $GITHUB_OUTPUT
+
+      - name: ${{ matrix.target.repo }}にPR作成
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_REPO: ${{ matrix.target.repo }}
+          TARGET_BRANCH: ${{ matrix.target.branch }}
+          SOURCE_FILE: ${{ steps.pr-setup.outputs.SOURCE_FILE }}
+          FILE_CONTENT: ${{ steps.pr-setup.outputs.FILE_CONTENT }}
+          BRANCH_NAME: ${{ steps.pr-setup.outputs.BRANCH_NAME }}
+          SYNC_DATE: ${{ steps.pr-setup.outputs.SYNC_DATE }}
+        run: |
+          # PRのタイトルと本文を設定
+          PR_TITLE="🔄 TODOワークフロー更新 ($SYNC_DATE)"
+          PR_BODY="# TODOワークフローファイルの自動同期だよ～✨\n\n**ソースリポジトリ**: \`${{ github.repository }}\`\n\n## 変更内容\n- \`.github/workflows/use-todo-to-issue-workflow.yml\` を最新版に更新\n\n## 確認してほしいこと\n- [ ] このファイルを使っている他のワークフローに影響ないか確認してね\n\n自動生成されたPRだから、確認してからマージしてね～"
+          
+          # GitHub CLIでPRを作成
+          gh repo set-default $TARGET_REPO
+          
+          echo "🔍 $TARGET_REPO のブランチ $BRANCH_NAME をチェック中..."
+          
+          # ブランチが存在するか確認して、なければ作成
+          if ! gh api repos/$TARGET_REPO/branches/$BRANCH_NAME &>/dev/null; then
+            echo "🌱 新しいブランチ $BRANCH_NAME を作成するよ～"
+            gh api \
+              --method POST \
+              -H "Accept: application/vnd.github+json" \
+              repos/$TARGET_REPO/git/refs \
+              -f ref="refs/heads/$BRANCH_NAME" \
+              -f sha="$(gh api repos/$TARGET_REPO/git/refs/heads/$TARGET_BRANCH --jq .object.sha)"
+          fi
+          
+          echo "📂 ファイルの存在を確認中..."
+          # ファイルが存在するか確認
+          FILE_SHA=$(gh api repos/$TARGET_REPO/contents/$SOURCE_FILE --jq .sha 2>/dev/null || echo "")
+          
+          # ファイルを更新またはアップロード
+          if [ -n "$FILE_SHA" ]; then
+            echo "🔄 既存ファイルを更新するよ～"
+            gh api \
+              --method PUT \
+              -H "Accept: application/vnd.github+json" \
+              repos/$TARGET_REPO/contents/$SOURCE_FILE \
+              -f message="🔄 TODOワークフローファイルを更新 ($SYNC_DATE)" \
+              -f content="$FILE_CONTENT" \
+              -f sha="$FILE_SHA" \
+              -f branch="$BRANCH_NAME"
+          else
+            echo "➕ 新しいファイルを作成するよ～"
+            gh api \
+              --method PUT \
+              -H "Accept: application/vnd.github+json" \
+              repos/$TARGET_REPO/contents/$SOURCE_FILE \
+              -f message="➕ TODOワークフローファイルを追加 ($SYNC_DATE)" \
+              -f content="$FILE_CONTENT" \
+              -f branch="$BRANCH_NAME"
+          fi
+          
+          echo "🔀 PRの状態を確認中..."
+          # PRがすでに存在するか確認して、なければ作成
+          EXISTING_PR=$(gh pr list -R $TARGET_REPO -H $BRANCH_NAME -B $TARGET_BRANCH --json number -q '.[0].number')
+          if [ -z "$EXISTING_PR" ]; then
+            echo "🔀 プルリクエストを作成するよ～"
+            gh pr create \
+              --repo $TARGET_REPO \
+              --base $TARGET_BRANCH \
+              --head $BRANCH_NAME \
+              --title "$PR_TITLE" \
+              --body "$PR_BODY" \
+              --label "automation" \
+              --label "maintenance"
+            
+            echo "✅ PR作成完了！リポジトリを見てみてね～"
+          else
+            echo "🔄 既存のPR (#$EXISTING_PR) を更新したよ～"
+          fi
