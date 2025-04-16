@@ -90,15 +90,41 @@ jobs:
           
           echo "🔍 $TARGET_REPO のブランチ $BRANCH_NAME をチェック中..."
           
+          # 【修正ポイント1】直接SHAを取得するためのコマンドを改善
+          echo "💎 ターゲットブランチのSHAを取得中..."
+          TARGET_SHA=""
+          TARGET_SHA=$(gh api repos/$TARGET_REPO/git/refs/heads/$TARGET_BRANCH --jq '.object.sha' 2>/dev/null)
+          
+          # 【修正ポイント2】SHAが取得できたか確認
+          if [ -z "$TARGET_SHA" ] || [ ${#TARGET_SHA} -ne 40 ]; then
+            echo "❌ 有効なSHAが取得できなかったよ～！代わりのアプローチを試すね..."
+            # 【修正ポイント3】別の方法でSHAを取り出す
+            TARGET_SHA=$(curl -s -H "Authorization: token $GH_TOKEN" \
+              "https://api.github.com/repos/$TARGET_REPO/git/refs/heads/$TARGET_BRANCH" | \
+              grep -o '"sha":"[^"]*"' | head -1 | sed 's/"sha":"//;s/"//g')
+            
+            # さらに確認
+            if [ -z "$TARGET_SHA" ] || [ ${#TARGET_SHA} -ne 40 ]; then
+              echo "❌ SHAの取得に失敗したよ〜！このリポジトリはスキップするね..."
+              exit 1
+            fi
+          fi
+          
+          echo "✅ 取得したSHA: $TARGET_SHA (${#TARGET_SHA}文字)"
+          
           # ブランチが存在するか確認して、なければ作成
           if ! gh api repos/$TARGET_REPO/branches/$BRANCH_NAME &>/dev/null; then
             echo "🌱 新しいブランチ $BRANCH_NAME を作成するよ～"
-            gh api \
-              --method POST \
+            # 【修正ポイント4】直接取得したSHAを使用
+            curl -s -X POST -H "Authorization: token $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
-              repos/$TARGET_REPO/git/refs \
-              -f ref="refs/heads/$BRANCH_NAME" \
-              -f sha="$(gh api repos/$TARGET_REPO/git/refs/heads/$TARGET_BRANCH --jq .object.sha)"
+              -d "{\"ref\":\"refs/heads/$BRANCH_NAME\",\"sha\":\"$TARGET_SHA\"}" \
+              "https://api.github.com/repos/$TARGET_REPO/git/refs"
+            
+            if [ $? -ne 0 ]; then
+              echo "❌ ブランチの作成に失敗したよ〜！このリポジトリはスキップするね..."
+              exit 1
+            fi
           fi
           
           echo "📂 ファイルの存在を確認中..."
