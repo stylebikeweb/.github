@@ -1,32 +1,39 @@
-name: 複数リポにファイルシンク爆速ワークフロー🔄
+name: 組織内ワークフローファイル同期システム🔄
 
 on:
-  # ファイルが変更されたらシンクを実行
+  # ファイル更新時に実行
   push:
     paths:
       - '.github/workflows/use-todo-to-issue-workflow.yml'
   
-  # 手動で実行もできるようにしておく
+  # 手動実行もできるように
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'テスト実行（PRは作らない）'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
 
 jobs:
   sync-file:
     runs-on: ubuntu-latest
-    # 文字列連結テクニック！「リポ:ブランチ」の形式で指定するよ～
+    # マトリックス戦略でリポジトリをループ！
     strategy:
       matrix:
         target:
           - "stylebikeweb/shopify-email-notifications:main"
-          # - "stylebikeweb/ターゲットリポジトリ2:develop" 
-          # 必要なだけ追加可能！こんな感じで～
-          # - "stylebikeweb/ターゲットリポジトリ3:main"
-      # 一つが失敗しても他は続行する設定
+          # 必要に応じて追加可能
+          # - "stylebikeweb/他のリポ名:main"
       fail-fast: false
     
-    # 各ターゲットリポジトリごとに並列で処理！
+    # 各ターゲットリポジトリごとに並列処理
     name: ${{ matrix.target }}へ同期中...
     
-    # GitHub Actions内でクロスリポジトリ操作の権限設定
+    # アクセス権限を設定
     permissions:
       contents: write
       pull-requests: write
@@ -40,7 +47,7 @@ jobs:
       - name: ターゲット情報を分解
         id: parse-target
         run: |
-          # 「リポ:ブランチ」からリポとブランチを分割する
+          # 「リポ:ブランチ」からリポとブランチに分割
           TARGET="${{ matrix.target }}"
           REPO="${TARGET%:*}"
           BRANCH="${TARGET#*:}"
@@ -67,6 +74,7 @@ jobs:
           echo "FILE_CONTENT=$FILE_CONTENT" >> $GITHUB_OUTPUT
 
       - name: ${{ steps.parse-target.outputs.repo }}にPR作成
+        if: ${{ github.event.inputs.dry_run != 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TARGET_REPO: ${{ steps.parse-target.outputs.repo }}
@@ -79,9 +87,6 @@ jobs:
           # PRのタイトルと本文を設定
           PR_TITLE="🔄 TODOワークフロー更新 ($SYNC_DATE)"
           PR_BODY="# TODOワークフローファイルの自動同期だよ～✨\n\n**ソースリポジトリ**: \`${{ github.repository }}\`\n\n## 変更内容\n- \`.github/workflows/use-todo-to-issue-workflow.yml\` を最新版に更新\n\n## 確認してほしいこと\n- [ ] このファイルを使っている他のワークフローに影響ないか確認してね\n\n自動生成されたPRだから、確認してからマージしてね～"
-          
-          # GitHub CLIでPRを作成
-          gh repo set-default $TARGET_REPO
           
           echo "🔍 $TARGET_REPO のブランチ $BRANCH_NAME をチェック中..."
           
@@ -140,3 +145,18 @@ jobs:
           else
             echo "🔄 既存のPR (#$EXISTING_PR) を更新したよ～"
           fi
+
+      - name: テストモード実行
+        if: ${{ github.event.inputs.dry_run == 'true' }}
+        env:
+          TARGET_REPO: ${{ steps.parse-target.outputs.repo }}
+          TARGET_BRANCH: ${{ steps.parse-target.outputs.branch }}
+          SOURCE_FILE: ${{ steps.pr-setup.outputs.SOURCE_FILE }}
+          BRANCH_NAME: ${{ steps.pr-setup.outputs.BRANCH_NAME }}
+        run: |
+          echo "🧪 テストモード実行中..."
+          echo "対象リポジトリ: $TARGET_REPO"
+          echo "対象ブランチ: $TARGET_BRANCH"
+          echo "対象ファイル: $SOURCE_FILE"
+          echo "PR用ブランチ名: $BRANCH_NAME"
+          echo "このファイルが同期されます（実際のPRは作成されません）"
