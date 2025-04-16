@@ -1,0 +1,46 @@
+name: 組織内ワークフローファイル同期システム🔄
+
+on:
+  # ファイル更新時に実行
+  push:
+    paths:
+      - '.github/workflows/use-todo-to-issue-workflow.yml'
+  
+  # 手動実行もできるように
+  workflow_dispatch:
+
+jobs:
+  sync-files:
+    runs-on: ubuntu-latest
+    name: ワークフローファイル同期処理
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+
+      - name: ファイル同期アクション実行
+        uses: BetaHuhn/repo-file-sync-action@main
+        with:
+          GH_PAT: ${{ secrets.FILE_SYNC_TOKEN }}
+          CONFIG_PATH: .github/sync-config.yml
+          COMMIT_BODY: |
+            🔄 TODOワークフローファイルの自動同期だよ～✨
+            
+            **ソースリポジトリ**: `${{ github.repository }}`
+            
+            ## 変更内容
+            - `.github/workflows/use-todo-to-issue-workflow.yml` を最新版に更新
+            
+            ## 確認してほしいこと
+            - このファイルを使っている他のワークフローに影響ないか確認してね
+            
+            自動生成されたPRだから、確認してからマージしてね～
+          COMMIT_PREFIX: "🔄"
+          PR_TITLE: "TODOワークフロー更新"
+          COMMIT_MESSAGE: "TODOワークフローファイルを更新"
+          GIT_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
+          GIT_USERNAME: "github-actions[bot]"
+          SKIP_PR: false
+          DRY_RUN: false
+          BRANCH_PREFIX: "sync-"
