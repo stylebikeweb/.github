@@ -1,5 +1,21 @@
 # https://github.com/stylebikeweb/.github/.github/workflows/use-todo-to-issue-workflow.yml
 # から複製されたワークフロー。変更は ↑↑↑ に適用するべし！
+# 
+# パーソナルアクセストークン（PAT）の更新
+# 1. GitHubアカウントの「Settings」→「Developer settings」
+#      →「Personal access tokens」→「Tokens (classic)」へ移動
+#   1. 既存の「FILE_SYNC_TOKEN」トークンを選択
+#   2. 「Regenerate token」をクリック
+#   3. 期間は適当に設定（あまり長すぎないほうがセキュリティ的にGOOD）
+#   4. 権限は最低限、「repo」と「workflow」にチェックが入っていることを確認
+#   5. 生成されたトークンをコピー（一度しか表示されないから注意）
+# 2. 組織の .github リポジトリにシークレットを追加
+#   1. リポジトリの「Settings」→「Secrets and variables」→「Actions」へ移動
+#   2. 「New repository secret」をクリック
+#   3. 名前: FILE_SYNC_TOKEN
+#   4. 値: さっきコピーしたPATをペースト
+#   5. 「Add secret」をクリック
+
 name: Use TODO to ISSUE Workflow
 
 # いつ実行するか設定～
